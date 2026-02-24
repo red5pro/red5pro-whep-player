@@ -78,7 +78,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         flex-basis: 0;
       }
 
-      .red5pro-publisher, .red5pro-subscriber {
+      .red5pro-subscriber {
         width: 100%;
         height: 100%;
       }
@@ -155,12 +155,24 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
             'background: #222; color: #ebefd0',
             'background: #fff; color: #222'
           )
+          console.log('')
+          console.log(
+            '%c [retry] ' + '%c       : Flag to indicate that the subscription should be retried. Default: `true`',
+            'background: #222; color: #ebefd0',
+            'background: #fff; color: #222'
+          )
+          console.log('')
+          console.log(
+            '%c [retry_delay] ' + '%c       : Delay in milliseconds to retry the subscription. Default: `2000`',
+            'background: #222; color: #ebefd0',
+            'background: #fff; color: #222'
+          )
         })()
     </script>
   </head>
   <body>
     <div class="app">
-        <div class="video-container subscribe-container hidden">
+        <div class="video-container subscribe-container">
             <video id="red5pro-subscriber" class="red5pro-subscriber" autoplay playsinline controls></video>
         </div>
     </div>
@@ -185,8 +197,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         const rtaToken = query('rta_token')
         const objectFit = query('object_fit', 'contain')
         const standalone = query('standalone', 'false') === 'true'
+        const retry = query('retry', 'true') === 'true'
+        const retryDelay = parseInt(query('retry_delay', RETRY_DELAY), 10)
 
         let subscriber
+        let shuttingDown = false
         const { WHEPClient } = red5
 
         const configureAuth = params => {
@@ -203,8 +218,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         const getConfiguration = () => {
           if (standalone) {
             return {
-              host,
-              app,
+              endpoint: `https://${host}/${app}/whep/endpoint/${streamName}`,
               streamName,
               connectionParams: configureAuth({})
             }
@@ -221,37 +235,53 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 
         const onSubscriberEvent = event => {
           const { type } = event
-          if (type === 'Subscribe.Time.Update') {
+          if (type === red5.SubscriberEventTypes.PLAYBACK_TIME_UPDATE) {
             // noisy.
             return
+          } else if (
+            type === red5.SubscriberEventTypes.CONNECTION_CLOSED ||
+            type === red5.SubscriberEventTypes.CONNECT_FAILURE ||
+            type === red5.SubscriberEventTypes.PLAY_UNPUBLISH
+          ) {
+            retrySubscribe()
           }
           console.log('[Subscriber]', type)
         }
 
         const subscribe = async () => {
           try {
-            const config = getConfiguration('whep')
+            const config = getConfiguration()
+            console.log('config', config)
             subscriber = new red5.WHEPClient()
             subscriber.on('*', onSubscriberEvent)
             await subscriber.init(config)
             await subscriber.subscribe()
           } catch (e) {
-            unsubscribe()
-            // Retry. May be propagating.
-            let t = setTimeout(async () => {
-              clearTimeout(t)
-              await subscribe()
-            }, RETRY_DELAY)
+            await unsubscribe()
+            retrySubscribe()
+            
           }
         }
 
         const unsubscribe = async () => {
+          if (!subscriber) {
+            return
+          }
           try {
             subscriber.off('*', onSubscriberEvent)
             await subscriber.unsubscribe()
             subscriber = undefined
           } catch (e) {
             // noop.
+          }
+        }
+
+        const retrySubscribe = () => {
+          if (retry && !shuttingDown) {
+            let t = setTimeout(async () => {
+              clearTimeout(t)
+              await subscribe()
+            }, retryDelay)
           }
         }
 
@@ -268,9 +298,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 
         // Clean up on leave of page.
         window.addEventListener('beforeunload', async () => {
+          shuttingDown = true
           await unsubscribe()
         })
         window.addEventListener('pagehide', async () => {
+          shuttingDown = true
           await unsubscribe()
         })
 
