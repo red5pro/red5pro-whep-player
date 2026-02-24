@@ -29,14 +29,145 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
     <meta name="robots" content="noindex, nofollow" />
     <title>Red5 Player</title>
     <style>
-      iframe {
-        width: 100%;
-        min-height: 320px;
-        border: none;
-      }
+        h1, h2 {
+            margin: 0;
+        }
+        .app {
+            width: 100%;
+            max-width: 480px;
+            margin: 20px auto;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #player-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            align-items: center;
+        }
+        #player-form button {
+            width: fit-content;
+            padding: 10px 20px;
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+        }
+        .item > label {
+            width: 35%;
+            display: inline-block;
+            text-align: right;
+        }
+        .item > input,
+        .item > select,
+        .player-url > input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .item > input[type="text"],
+        .item > select,
+        .player-url > input[type="text"] {
+            flex: 1;
+        }
+        .player-url {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 480px;
+            margin: 20px auto;
+        }
+        .player-url-description {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        iframe {
+            width: 100%;
+            min-height: 320px;
+            border: none;
+        }
     </style>
   </head>
   <body>
-      <iframe src="./index.html?host=release.ci.red5.net&stream_name=todd&retry=false&standalone=true"></iframe>
+      <div class="app">
+        <h2>Player Configuration</h2>
+        <form id="player-form">
+            <div class="item">
+                <label for="host">Host:</label>
+                <input type="text" id="host" name="host" placeholder="Enter your host, e.g., userId-xxx.cloud.red5.net">
+            </div>
+            <div class="item">
+                <label for="stream_name">Stream Name:</label>
+                <input type="text" id="stream_name" name="stream_name" value="stream1">
+            </div>
+            <div class="item">
+                <label for="retry">Retry:</label>
+                <input type="checkbox" id="retry" name="retry" checked>
+            </div>
+            <div class="item">
+                <label for="standalone">Standalone:</label>
+                <input type="checkbox" id="standalone" name="standalone">
+            </div>
+            <div class="item">
+                <label for="node_group">Node Group:</label>
+                <input type="text" id="node_group" name="node_group" value="default">
+            </div>
+            <div class="item">
+                <label for="object_fit">Object Fit:</label>
+                <select id="object_fit" name="object_fit">
+                    <option value="contain">Contain</option>
+                    <option value="cover" selected>Cover</option>
+                    <option value="fill">Fill</option>
+                    <option value="none">None</option>
+                </select>
+            </div>
+            <button type="submit">Load Player</button>
+        </form>
+      </div>
+      <div class="player hidden">
+        <div class="player-url">
+            <label for="copy-url">Player URL:</label>
+            <input type="text" id="copy-url" name="copy-url" value="" readonly>
+            <button id="copy-url-button">Copy</button>
+        </div>
+        <p class="player-url-description">Once copied, paste the URL into your browser to view the player, or as the src attribute of an <code>iframe</code> element in your own web page.</p>
+        <iframe id="player-iframe"></iframe>
+      </div>
+      <script>
+        const playerForm = document.getElementById('player-form')
+        const playerIframe = document.getElementById('player-iframe')
+        const copyUrl = document.getElementById('copy-url')
+        const copyUrlButton = document.getElementById('copy-url-button')
+        playerForm.addEventListener('submit', (e) => {
+            e.preventDefault()
+            if (!host.value.trim()) {
+                alert('Please enter a host')
+                return
+            }
+            if (!stream_name.value.trim()) {
+                alert('Please enter a stream name')
+                return
+            }
+            playerIframe.src = `./index.html?host=${host.value.trim()}&stream_name=${stream_name.value.trim()}&retry=${retry.checked}&standalone=${standalone.checked}&node_group=${node_group.value.trim()}&object_fit=${object_fit.value}`
+            copyUrl.value = playerIframe.src
+            player.classList.remove('hidden')
+        })
+        copyUrlButton.addEventListener('click', () => {
+            copyUrl.select()
+            document.execCommand('copy')
+            alert('Player URL copied to clipboard')
+        })
+      </script>
   </body>
 </html>
