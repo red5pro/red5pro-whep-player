@@ -159,7 +159,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
                 alert('Please enter a stream name')
                 return
             }
-            playerIframe.src = `./index.html?host=${host.value.trim()}&stream_name=${stream_name.value.trim()}&retry=${retry.checked}&standalone=${standalone.checked}&node_group=${node_group.value.trim()}&object_fit=${object_fit.value}`
+            playerIframe.src = `https://red5pro.github.io/red5pro-whep-player/index.html?host=${host.value.trim()}&stream_name=${stream_name.value.trim()}&retry=${retry.checked}&standalone=${standalone.checked}&node_group=${node_group.value.trim()}&object_fit=${object_fit.value}`
             copyUrl.value = playerIframe.src
             player.classList.remove('hidden')
         })

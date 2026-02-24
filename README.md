@@ -92,7 +92,7 @@ The following provides a full example of the HTML and JavaScript pieces required
 ```js
 ;((window, red5) => {
 
-const { WhepClient } = red5
+const { WHEPClient } = red5
 
 let subscriber
 const host = 'my-deployment.cloud.red5'
@@ -164,10 +164,10 @@ The above example assumes you have included the Red5 HTML SDK dependency as a br
 If you install the SDK through NPM (e.g., `npm install --save red5pro-webrtc-sdk`) and use a packager - such as `Vite` - you most likely will access the SDK like the following:
 
 ```js
-import { WHEPClient } from 'red5pro-webrtc-sdk
+import { WHEPClient } from 'red5pro-webrtc-sdk'
 ```
 
-# Example Page & iframe
+# Example Page
 
 The [index.html](index.html) page provided in this repository has the above example included in it, along with the ability to define init configuration parameters using query params to have a Red5 "player"  - allowing you to use this page along with param configuration in your own projects without any further development!
 
@@ -200,9 +200,75 @@ https://localhost:8001/index.html?host=my-deployment.red5&stream_name=my-stream&
 
 > The above assumes that you are hosting the `index.html` under a basic web server on `localhost`. An example using python would be: `python -m http.server 8001`
 
-## iframe Usage
+# iframe Usage
 
 This repository provides a basic example [index.html](index.html) of a Red5 "player" that can be further used to embed into an `iframe` element on your own web-based pages and applications.
 
+The [iframe-form.html](iframe-form.html) page provides an easy form to fill out that will generate a URL for a Red5 Player that can be provided to Users with access to a web browser, or even used as the source for an `iframe` on your own web page!
+
+> Visit the form at the following page: [https://red5pro.github.io/red5pro-whep-player/iframe-form.html](https://red5pro.github.io/red5pro-whep-player/iframe-form.html)
+
 # Autoplay and Browser Restrictions
 
+> This section intends to address playback issues you may see regarding audio.
+
+Due to `autoplay` policy restrictions in browsers, it is required that any User visiting a page with a `video` or `audio` element declared with the `autoplay` attribute must arrive at that page through User Impetus - i.e., click on a link that directs the User to the page, or an element on the page that allows the `video` or `audio` element to begin playback.
+
+This restriction means that any copy-and-paste of links into the URL bar of a browser will impede auto-playback, as will any page refreshes on which the autoplay is requested.
+
+> You can read more about the policy in the following documentation: [https://developer.chrome.com/blog/autoplay/#mei](https://developer.chrome.com/blog/autoplay).
+
+Because of such restrictions, the safest way to ensure auto playback of a live stream is to also include the `muted` attribute along `autoplay` on the Media Element... or allow the Red5 HTML SDK to handle such logic internally! Yes, it can do that.
+
+## Red5 SDK Handling & Details
+
+Using the `muteOnAutoplayRestriction` initialization configuration for the `WHEPClient`, you can define how you would like the Red5 HTML SDK to handle exceptions in playback requests with `autoplay` declared on your media element(s).
+
+By setting `muteOnAutoplayRestriction` to `true` - which is the default - you are requesting the Red5 HTML SDK to handle any exceptions in the initial unmuted autoplay request. If an exception is thrown in the initial autoplay request, the Red5 Pro SDK will attempt to mute the media element and request playback again.
+
+If the subsequent - and muted - playback is successful, a `Subscribe.Autoplay.Muted` event will be notified on the `WHEPClient`, allowing you - as the developer - to handle such a case as meets your webapp requirements; for example, displaying a call-out UI element notifying the end-user to unmute the audio.
+
+If the subsequent request to playback as muted throws an exception, or if a failure happens at any point within the autoplay routine, the Red5 HTML SDK will dispatch a `Subscribe.Autoplay.Failure` event notification. Typically, this will result in not only audio being muted, but the video or audio stream is not auto-played at all in the media element. In such a scenario, the end-user will have to explicitly click the *play* button of the media element to begin playback. As a developer, you can respond to such an event to notify the end-user to take appropriate action.
+
+Alternatively, setting `muteOnAutoplayRestriction` to `false` will let the Red5 HTML SDK know to not take any further action if the initial autoplay request throws an exception. If an exception is thrown, the `Subscribe.Autoplay.Failure` event notification will bubble from the `WHEPClient`.
+
+## The Example
+
+The following example demonstrates how to incorporate the `muteOnAutoplayRestriction` initialization configuration property into your webapp.
+
+Take for example, that you have the following `video` element declared in your page:
+
+```html
+<video id="red5pro-subscriber" autoplay controls playsinline></video>
+```
+
+To tell the Red5 Pro HTML SDK that you would like it to handle autoplay and possible muting internally:
+
+```js
+const { WHEPClient } = red5
+
+...
+
+const handleAutoplayMuted = (event: SubscriberEvent) => {
+  // Notify user to unmute audio, e.g., callout UI to click unmute.
+}
+
+const handleAutoplayFailure = (event: SubscriberEvent) => {
+  // Notify user to click the Play button.
+}
+
+...
+
+const config = getConfiguration()
+
+subscriber = new WHEPClient()
+subscriber.on(red5prosdk.SubscriberEventTypes.AUTO_PLAYBACK_MUTED, handleAutoplayMuted)
+subscriber.on(red5prosdk.SubscriberEventTypes.AUTO_PLAYBACK_FAILURE, handleAutoplayFailure)
+
+await subscriber.init(config)
+await subscriber.subscribe()
+
+...
+```
+
+After initialization of the `subscriber` and prior to a request to start subscribing to stream, two event handlers are defined to handle the `Subscribe.Autoplay.Muted` and `Subscribe.Autoplay.Failure` events (defined on the `SubscriberEventTypes` object as `AUTO_PLAYBACK_MUTED` and `AUTO_PLAYBACK_FAILURE`, respectively). We left out any sordid details on how to alert end-users of such notifications - so let your imaginations run wild!
