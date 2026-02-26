@@ -252,7 +252,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
           try {
             const config = getConfiguration()
             console.log('config', config)
-            subscriber = new red5.WHEPClient()
+            subscriber = new WHEPClient()
             subscriber.on('*', onSubscriberEvent)
             await subscriber.init(config)
             await subscriber.subscribe()
