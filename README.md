@@ -8,7 +8,7 @@ This repository is a working example of utilizing the [Red5 HTML SDK](https://gi
 * [Example Page](#example-page)
 * [iframe Usage](#iframe-usage)
 * [Autoplay & Browser Restrictions](#autoplay-and-browser-restrictions)
-* [Extra Credit - Player UI]()
+* [Extra Credit - Player UI](#extra-credit---player-ui)
 
 # Introduction
 
