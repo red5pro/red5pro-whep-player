@@ -2,6 +2,14 @@
 
 This repository is a working example of utilizing the [Red5 HTML SDK](https://github.com/red5pro/red5pro-webrtc-sdk) to create a bare-bones video player solution that can be used as-is or easily embedded into an `iframe` for playback of live streams.
 
+* [Introduction](#introduction)
+* [Set Up](#set-up)
+* [Full Example](#full-example)
+* [Example Page](#example-page)
+* [iframe Usage](#iframe-usage)
+* [Autoplay & Browser Restrictions](#autoplay-and-browser-restrictions)
+* [Extra Credit - Player UI]()
+
 # Introduction
 
 It is a common misconception that our browser-based Red5 HTML SDK provides a "player" that can be added to a web page. Our SDK is designed to ease the communication process with the Red5 Server in negotiation and establishing a connection for live streaming. As a result of this negotiation, a `MediaStream` is available which can be assigned as a source object to an HTML `video` element and will enable playback - for both a publisher (`WHIPClient`) and subscriber (`WHEPClient`).
@@ -272,3 +280,45 @@ await subscriber.subscribe()
 ```
 
 After initialization of the `subscriber` and prior to a request to start subscribing to stream, two event handlers are defined to handle the `Subscribe.Autoplay.Muted` and `Subscribe.Autoplay.Failure` events (defined on the `SubscriberEventTypes` object as `AUTO_PLAYBACK_MUTED` and `AUTO_PLAYBACK_FAILURE`, respectively). We left out any sordid details on how to alert end-users of such notifications - so let your imaginations run wild!
+
+# Extra Credit - Player UI
+
+Because the Red5 HTML SDK is at its core a library to ease in negotiation and connection with the Red5 Server to stream live media, it does not provide any Custom UI and allows for the underlying generated `MediaStream` to be assigned to an HTML `video` (or `audio`) element directly.
+
+This _does not_ mean that you have to keep the default browser chrome of the `video` player, however. In fact, because of its simplicity, it opens up the possibility of using whatever UI customization you prefer!
+
+## Player UI & Styles
+
+When thinking about displaying your own cutom Player UI for a `video` element that is playing back a live `MediaStream`, you would most likely want to think about state updates based on properties and events coming from the HTML `video` element itself. To understand what those events are and think about state (e.g., time display, audio mute, etc.), we invite you to refer to the [MDN documentation for video state and events](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement).
+
+While we encourage you to create your own Player UI and understand more about the underlying architecture of the HTML `video` and `audio` elements, there are many smart engineers out there who have also studied such things and made it easy for you to apply Player themes.
+
+In fact, there is a site where you can browse themes that will match your webapp look-and-feel and easily apply to the `video` playback:
+
+[https://player.style/?ref=producthunt&media=video&media=audio&framework=html](https://player.style/?ref=producthunt&media=video&media=audio&framework=html)
+
+> The `index-styled.html` page included in this repo is an example of applying the [Sutro](https://player.style/themes/sutro) theme from the site above to the `video` element of a live playback!
+
+Below is an example of applying a simple player theme on the `video` element with `MediaStream` live playback:
+
+![Player UI](images/bbb.png)
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/player.style/sutro/+esm"></script>
+...
+<media-theme-sutro style="width:100%">
+    <video id="red5pro-subscriber" 
+            class="red5pro-subscriber" 
+            autoplay playsinline
+            slot="media"
+            crossorigin="anonymous"></video>
+</media-theme-sutro>
+```
+
+### Note about live video and Playback UI
+
+Due to the nature of live playback, there is no inherent concept/logic of scrubbing for `video` and `audio` elements in the browser. As such, if using any Player theme libraries out of the box, their progress bars will have a scrubber stuck at the beginning time and will not respond to user interaction.
+
+We invite you to look at the default player UI chrome for each browser when streaming live video and notice the difference - not only between vendor implementations, but also live versus VOD UI elements.
+
+As such, you may have to apply additional logic when it comes to UI display when using a 3rd-party Player Theme library.
