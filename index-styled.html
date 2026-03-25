@@ -23,169 +23,168 @@ WHETHER IN  AN  ACTION  OF  CONTRACT,  TORT  OR  OTHERWISE,  ARISING  FROM,  OUT
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow" />
-    <title>Red5 Player</title>
-    <script src="//webrtchacks.github.io/adapter/adapter-latest.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/red5pro-webrtc-sdk@latest/red5pro-sdk.min.js"></script>
-    <script type="text/javascript" id="hs-script-loader" async defer src="https://js.hs-scripts.com/45851440.js"></script>
-    <style>
-      :root {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-        line-height: 1.5;
-        font-weight: 400;
-        height: 100%;
 
-        color: rgba(255, 255, 255, 0.87);
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Red5 Player</title>
+  <script src="//webrtchacks.github.io/adapter/adapter-latest.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/red5pro-webrtc-sdk@latest/red5pro-sdk.min.js"></script>
+  <script type="text/javascript" id="hs-script-loader" async defer src="https://js.hs-scripts.com/45851440.js"></script>
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+      line-height: 1.5;
+      font-weight: 400;
+      height: 100%;
 
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        -webkit-text-size-adjust: 100%;
+      color: rgba(255, 255, 255, 0.87);
 
-        --color-black: rgb(12, 12, 12);
-        --color-red5: rgb(208, 56, 50);
-        --color-gray: rgb(136, 136, 136);
-        --color-offwhite: rgb(245, 245, 245, 0.87);
-      }
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-text-size-adjust: 100%;
 
-      body {
-        margin: 0;
-        font-weight: 300;
-        font-size: 0.8rem;
-        background-color: var(--color-black);
-        height: 100%;
-      }
+      --color-black: rgb(12, 12, 12);
+      --color-red5: rgb(208, 56, 50);
+      --color-gray: rgb(136, 136, 136);
+      --color-offwhite: rgb(245, 245, 245, 0.87);
+    }
 
-      .hidden {
-        display: none;
-      }
+    body {
+      margin: 0;
+      font-weight: 300;
+      font-size: 0.8rem;
+      background-color: var(--color-black);
+      height: 100%;
+    }
 
-      .app {
-        display: flex;
-        flex-direction: row;
-        column-gap: 16px;
-        column-gap: 16px;
-        width: 100%;
-        height: 100%;
-      }
+    .hidden {
+      display: none;
+    }
 
-      .app .video-container {
-        flex: 1;
-        flex-basis: 0;
-      }
+    .app {
+      display: flex;
+      flex-direction: row;
+      column-gap: 16px;
+      column-gap: 16px;
+      width: 100%;
+      height: 100%;
+    }
 
-      .red5pro-subscriber {
-        width: 100%;
-        height: 100%;
-      }
+    .app .video-container {
+      flex: 1;
+      flex-basis: 0;
+    }
 
-      video {
-        object-fit: contain;
-      }
-    </style>
-    <script>
-        ;(function () {
-          console.log('------- USAGE --------')
-          console.log('')
-          console.log(
-            'This page is designed to establish a Red5 Player using query params. You can provide query params in the URL in order to configure the player.'
-          )
-          console.log('The following query params are available:')
-          console.log(
-            '%c [host] ' +
-              '%c       : hostname or IP. Default: `window.location.hostname`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [app] ' + '%c       : app context. Default: `live`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [stream_name] ' + '%c       : The name of the stream to pub/sub. Default: `mystream`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [api_version] ' + '%c       : The version of the Stream Manager 2.0 API. Default: `v1`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [node_group] ' + '%c       : The name of the node group to target if using Stream Manager 2.0. Default: `default`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [rta_user] ' + '%c       : Username for RoundTrip Authentication if using. Default: `undefined`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [rta_pass] ' + '%c       : Password for RoundTrip Authentication if using. Default: `undefined`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [rta_token] ' + '%c       : Token for RoundTrip Authentication if using. Default: `undefined`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [standalone] ' + '%c       : Flag to indicate that the streaming is requested on a standalone deployment - not Stream Manager 2.0. Default: `false`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [object_fit] ' + '%c       : Object fit style to assign to the video elements. https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [retry] ' + '%c       : Flag to indicate that the subscription should be retried. Default: `true`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-          console.log('')
-          console.log(
-            '%c [retry_delay] ' + '%c       : Delay in milliseconds to retry the subscription. Default: `2000`',
-            'background: #222; color: #ebefd0',
-            'background: #fff; color: #222'
-          )
-        })()
-    </script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/player.style/sutro/+esm"></script>
-  </head>
-  <body>
-    <div class="app">
-        <div class="video-container subscribe-container">
-            <media-theme-sutro style="width:100%">
-              <video id="red5pro-subscriber" 
-                     class="red5pro-subscriber" 
-                     autoplay playsinline
-                     slot="media"
-                     crossorigin="anonymous"></video>
-            </media-theme-sutro>
-        </div>
+    .red5pro-subscriber {
+      width: 100%;
+      height: 100%;
+    }
+
+    video {
+      object-fit: contain;
+    }
+  </style>
+  <script>
+    ; (function () {
+      console.log('------- USAGE --------')
+      console.log('')
+      console.log(
+        'This page is designed to establish a Red5 Player using query params. You can provide query params in the URL in order to configure the player.'
+      )
+      console.log('The following query params are available:')
+      console.log(
+        '%c [host] ' +
+        '%c       : hostname or IP. Default: `window.location.hostname`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [app] ' + '%c       : app context. Default: `live`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [stream_name] ' + '%c       : The name of the stream to pub/sub. Default: `mystream`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [api_version] ' + '%c       : The version of the Stream Manager 2.0 API. Default: `v1`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [node_group] ' + '%c       : The name of the node group to target if using Stream Manager 2.0. Default: `default`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [rta_user] ' + '%c       : Username for RoundTrip Authentication if using. Default: `undefined`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [rta_pass] ' + '%c       : Password for RoundTrip Authentication if using. Default: `undefined`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [rta_token] ' + '%c       : Token for RoundTrip Authentication if using. Default: `undefined`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [standalone] ' + '%c       : Flag to indicate that the streaming is requested on a standalone deployment - not Stream Manager 2.0. Default: `false`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [object_fit] ' + '%c       : Object fit style to assign to the video elements. https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [retry] ' + '%c       : Flag to indicate that the subscription should be retried. Default: `true`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+      console.log('')
+      console.log(
+        '%c [retry_delay] ' + '%c       : Delay in milliseconds to retry the subscription. Default: `2000`',
+        'background: #222; color: #ebefd0',
+        'background: #fff; color: #222'
+      )
+    })()
+  </script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/player.style/sutro/+esm"></script>
+</head>
+
+<body>
+  <div class="app">
+    <div class="video-container subscribe-container">
+      <media-theme-sutro style="width:100%">
+        <video id="red5pro-subscriber" class="red5pro-subscriber" autoplay playsinline slot="media"
+          crossorigin="anonymous"></video>
+      </media-theme-sutro>
     </div>
-    <script>
-      ;((window, red5) => {
+  </div>
+  <script>
+      ; ((window, red5) => {
         const subscribeContainer = document.querySelector('.subscribe-container')
 
         const searchParams = new URLSearchParams(window.location.search)
@@ -267,7 +266,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
           } catch (e) {
             await unsubscribe()
             retrySubscribe()
-            
+
           }
         }
 
@@ -299,7 +298,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
           })
           try {
             await subscribe()
-            if (window._hsq) window._hsq.push(["trackEvent", { id: "whep_player_start" }])
+            if (window._hsq) window._hsq.push(["trackEvent", { id: "whep_player_start", host: host, app: app, streamName: streamName }])
           } catch (e) {
             alert(`Could not start player: ${e.message}`)
           }
@@ -317,6 +316,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
 
         start()
       })(window, window.red5prosdk)
-    </script>
-  </body>
+  </script>
+</body>
+
 </html>
