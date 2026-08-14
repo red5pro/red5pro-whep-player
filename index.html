@@ -195,8 +195,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         }
 
         const RETRY_DELAY = 2000
+        const MAX_RETRIES = 20
+        let retryCount = 0
+        let retryTimeout = null
 
-        const host = query('host', window.location.hostName)
+        const host = query('host', window.location.hostname)
         const app = query('app', 'live')
         const streamName = query('stream_name', 'mystream')
         const apiVersion = query('api_version', 'v1')
@@ -235,6 +238,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         const getConfiguration = () => {
           if (standalone) {
             return {
+              host,
               endpoint: `https://${host}/${app}/whep/endpoint/${streamName}`,
               streamName,
               connectionParams: configureAuth({})
@@ -242,6 +246,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
           }
           // Else, Stream Manager 2.0 integration.
           return {
+            host,
             endpoint: `https://${host}/as/${apiVersion}/proxy/whep/${app}/${streamName}`,
             streamName,
             connectionParams: configureAuth({
@@ -268,6 +273,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         const subscribe = async () => {
           try {
             const config = getConfiguration()
+            const { host } = config
+            if (!host) {
+              alert('Host is required')
+              return
+            }
             console.log('config', config)
             subscriber = new WHEPClient()
             subscriber.on('*', onSubscriberEvent)
@@ -276,7 +286,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
           } catch (e) {
             await unsubscribe()
             retrySubscribe()
-
           }
         }
 
@@ -294,9 +303,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         }
 
         const retrySubscribe = () => {
+          if (retryTimeout) {
+            clearTimeout(retryTimeout)
+            retryTimeout = null
+          }
           if (retry && !shuttingDown) {
-            let t = setTimeout(async () => {
-              clearTimeout(t)
+            if (retryCount >= MAX_RETRIES) {
+              alert('Max retries reached')
+              return
+            }
+            retryTimeout = setTimeout(async () => {
+              clearTimeout(retryTimeout)
+              retryTimeout = null
+              retryCount++
               await subscribe()
             }, retryDelay)
           }
