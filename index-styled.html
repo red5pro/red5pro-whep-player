@@ -197,7 +197,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. -->
         let retryCount = 0
         let retryTimeout = null
 
-        const host = query('host', window.location.hostName)
+        const host = query('host', window.location.hostname)
         const app = query('app', 'live')
         const streamName = query('stream_name', 'mystream')
         const apiVersion = query('api_version', 'v1')
